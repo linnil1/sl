@@ -39,7 +39,15 @@
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
+
+#include <stdlib.h>
+#include <string.h>
+
 #include "sl.h"
+typedef struct {
+	int y,x;
+	char c;
+}store;
 
 void add_smoke(int y, int x);
 void add_man(int y, int x);
@@ -47,19 +55,41 @@ int add_C51(int x);
 int add_D51(int x);
 int add_sl(int x);
 void option(char *str);
+
 int my_mvaddstr(int y, int x, char *str);
+void my_output(store** store_all,int* store_nums,int lim);
 
 int ACCIDENT  = 0;
 int LOGO      = 0;
 int FLY       = 0;
 int C51       = 0;
 
+int addchModify(int y, int x, char c);
+void mapModify(store* s,int num,char *output_map);
+store *store_ptr;
+int store_num;
+
+int addchModify(int y, int x, char c)
+{
+//	printf("%d %d %c\n",y,x,c);
+	store *s = &store_ptr[store_num++];
+	if(y<0)
+	{
+		printf("y<0");
+		return ERR;
+	}
+	s->y = y;
+	s->x = x;
+	s->c = c;
+	return OK;
+}
+
 int my_mvaddstr(int y, int x, char *str)
 {
     for ( ; x < 0; ++x, ++str)
         if (*str == '\0')  return ERR;
     for ( ; *str != '\0'; ++str, ++x)
-        if (mvaddch(y, x, *str) == ERR)  return ERR;
+        if (addchModify(y, x, *str) == ERR)  return ERR;
     return OK;
 }
 
@@ -78,24 +108,30 @@ void option(char *str)
     }
 }
 
+#define M_change 10000
+#define N        200
+
+int COLS,LINES;
 int main(int argc, char *argv[])
 {
     int x, i;
+	extern int COLS,LINES;
+	COLS = 83;
+	LINES= 47;
 
     for (i = 1; i < argc; ++i) {
         if (*argv[i] == '-') {
             option(argv[i] + 1);
         }
     }
-    initscr();
-    signal(SIGINT, SIG_IGN);
-    noecho();
-    curs_set(0);
-    nodelay(stdscr, TRUE);
-    leaveok(stdscr, TRUE);
-    scrollok(stdscr, FALSE);
+
+	store* store_all[N] ;
+	int store_nums[N] ;
 
     for (x = COLS - 1; ; --x) {
+		int mod = x+N/2;
+		store_ptr = store_all[mod] = (store *)malloc(sizeof(store)*M_change);
+		store_num = 0;
         if (LOGO == 1) {
             if (add_sl(x) == ERR) break;
         }
@@ -105,14 +141,47 @@ int main(int argc, char *argv[])
         else {
             if (add_D51(x) == ERR) break;
         }
-        getch();
-        refresh();
-        usleep(40000);
+		store_nums[mod] = store_num;
     }
-    mvcur(0, COLS - 1, LINES - 1, 0);
-    endwin();
+	my_output(store_all,store_nums,x);
+
+	//free
+	int lim = x;
+    for (x = COLS - 1; x>lim; --x) 
+	{
+		int mod = N/2+x;
+		free(store_all[mod]);
+	}
+//	printf("OK");
+	return 0;
 }
 
+void my_output(store** store_all,int* store_nums,int lim)
+{
+	char *output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
+	memset(output_map,' ',(sizeof(char)*LINES*(COLS+1)));
+	int x;
+	for(x=0;x<LINES;++x)
+		output_map[     x*(COLS+1)+COLS  ]='\0';
+
+    for (x = COLS - 1; x>lim; --x) 
+	{
+		int mod = N/2+x,i;
+		mapModify(store_all[mod],store_nums[mod],output_map);
+		for(i=0;i<LINES;++i)
+			printf("%s\n",output_map+i*(COLS+1));
+		usleep(10000);
+	}
+	free(output_map);
+}
+
+void mapModify(store *s,int num,char *output_map)
+{
+	int i;
+	for(i=0;i<num;++i)
+		if( s[i].x < COLS)
+			output_map[s[i].y*(COLS+1)+s[i].x] = s[i].c;
+}
 
 int add_sl(int x)
 {

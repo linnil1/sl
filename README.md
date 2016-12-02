@@ -1,3 +1,9 @@
+SL for python 
+=============
+
+Ugly way to do it
+
+
 SL(1): Cure your bad habit of mistyping
 =======================================
 
