@@ -1,3 +1,4 @@
 /sl
 env
 build
+__pycache__/

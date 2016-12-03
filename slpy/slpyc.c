@@ -7,7 +7,6 @@ typedef struct {
 extern int N;
 extern store** store_all ;
 extern int* store_nums ;
-extern int store_now;
 extern char* output_map;
 void windowInit(int c, int l,char *arg);
 void windowDestroy(void);
@@ -15,54 +14,57 @@ void mapModify(store* s,int num);
 
 int sl_step=0;
 
-static PyObject * slpy_init(PyObject *self, PyObject *args)
+static PyObject * slpyc_init(PyObject *self, PyObject *args)
 {
 	int c,l;
 	const char *arg;
 	if (!PyArg_ParseTuple(args, "iis", &c,&l,&arg))
 		return NULL;
-	printf("%s\n",arg);
 	windowInit(c,l,arg);
 	sl_step=0;
 	Py_RETURN_NONE;
 }
-static PyObject * slpy_len(PyObject *self, PyObject *args)
+static PyObject * slpyc_len(PyObject *self, PyObject *args)
 {
 	return Py_BuildValue("i",N);
 }
 
-static PyObject * slpy_step(PyObject *self, PyObject *args)
+static PyObject * slpyc_step(PyObject *self, PyObject *args)
 {
+//	printf("%d %d\n",sl_step,N);
 	if(sl_step < N)
 	{
 		mapModify(store_all[sl_step],store_nums[sl_step]);
 		++sl_step;
 		return Py_BuildValue("s",output_map);
 	}
-	else
+	else if(sl_step==N)
 	{
 		windowDestroy();
+		++sl_step;
 		Py_RETURN_NONE;
 	}
+	else
+		Py_RETURN_NONE;
 }
 
 static PyMethodDef methods[] = {
-    {"init",  slpy_init, METH_VARARGS, "init"},
-    {"len" ,  slpy_len , METH_VARARGS, "get len of the list"},
-    {"step",  slpy_step, METH_VARARGS, "sl generator"},
+    {"init",  slpyc_init, METH_VARARGS, "init"},
+    {"len" ,  slpyc_len , METH_VARARGS, "get len of the list"},
+    {"step",  slpyc_step, METH_VARARGS, "sl generator"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 static struct PyModuleDef module = {
    PyModuleDef_HEAD_INIT,
-   "slpy",   /* name of module */
+   "slpyc",   /* name of module */
    "sl work on python", /* module documentation, may be NULL */
    -1,       /* size of per-interpreter state of the module,
                 or -1 if the module keeps state in global variables. */
    methods
 };
 
-PyMODINIT_FUNC PyInit_slpy(void)
+PyMODINIT_FUNC PyInit_slpyc(void)
 {
     return PyModule_Create(&module);
 }
@@ -76,7 +78,7 @@ int main(int argc, char *argv[])
     }
 
     /* Add a built-in module, before Py_Initialize */
-    PyImport_AppendInittab("slpy", PyInit_slpy);
+    PyImport_AppendInittab("slpyc", PyInit_slpyc);
 
     /* Pass argv[0] to the Python interpreter */
     Py_SetProgramName(program);
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
     /* Optionally import the module; alternatively,
        import can be deferred until the embedded script
        imports it. */
-    PyImport_ImportModule("slpy");
+    PyImport_ImportModule("slpyc");
 
     PyMem_RawFree(program);
     return 0;

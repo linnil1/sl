@@ -1,7 +1,9 @@
 SL for python 
 =============
 
-Ugly way to do it
+Turn sl.c for python use
+Use generator to make it look simple
+But it is really ugly methods
 
 
 SL(1): Cure your bad habit of mistyping

@@ -52,16 +52,16 @@ char* output_map;
 int count(){
 	int min = 0;
 	if (LOGO == 1){
-		if(-LOGOLENGTH < min) 
-			min = -LOGOLENGTH;
+		if(-LOGOLENGTH-1 < min) 
+			min = -LOGOLENGTH-1;
 	}
 	else if (C51 == 1){
-	   if( -D51LENGTH < min ) 
-			min = -D51LENGTH;
+		if (-C51LENGTH-1 < min)
+			min = -C51LENGTH-1;
 	}
 	else {
-		if (-C51LENGTH < min)
-			min = -C51LENGTH;
+		if( -D51LENGTH-1 < min ) 
+			min = -D51LENGTH-1;
 	}
 	return min;
 }
@@ -119,8 +119,8 @@ void windowInit(int c, int l, char *arg)
 	N = -count()+COLS-1;
 
 	// store data
-	store_all  = (store **)malloc(sizeof(store*)*N);
-	store_nums = (int *)   malloc(sizeof(int)   *N);
+	store_all  = (store **)malloc(sizeof(store*)*(N+1));
+	store_nums = (int *)   malloc(sizeof(int)   *(N+1));
 
 	int x;
     for (x = COLS - 1; ; --x) {
@@ -138,6 +138,12 @@ void windowInit(int c, int l, char *arg)
             if (add_D51(x) == ERR) break;
         }
     }
+
+	if(-x+COLS-1 != N) //error
+	{
+		puts("error");
+		exit(1);
+	}
 
 	// output string
 	output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
