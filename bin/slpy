@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-
 import os
-import sys
 import slpy
+import time
+import sys
 rows, columns = os.popen('stty size', 'r').read().split()
-slpy.sl(rows,columns,sys.argv)
+arg = sys.argv[1] if len(sys.argv)>1 else ""
+for i in slpy.sl(int(columns),int(rows),arg):
+    print(i)
+    time.sleep(0.04)

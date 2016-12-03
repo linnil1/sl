@@ -5,6 +5,10 @@ Turn sl.c for python use
 Use generator to make it look simple
 But it is really ugly methods
 
+This code are modifyied from
+
+https://github.com/mtoyoda/sl
+
 
 SL(1): Cure your bad habit of mistyping
 =======================================

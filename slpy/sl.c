@@ -6,10 +6,6 @@
  *        Last Modified: 2014/06/03
  *========================================
  */
-/*========================================
- *    sl.c: SL for python
- *========================================
- */
 
 #include <curses.h>
 #include <unistd.h>
@@ -31,54 +27,49 @@ int FLY       = 0;
 int C51       = 0;
 
 typedef struct {
-	int y,x;
-	char c;
+    int y,x;
+    char c;
 }store;
 int COLS,LINES,N;
 
-int my_mvaddstr(int y, int x, char *str);
+int  my_mvaddstr(int y, int x, char *str);
 void my_output(void);
 void windowInit(int c, int l, char *arg);
 void windowDestroy(void);
-int count(void);
-int addchModify(int y, int x, char c);
-void mapModify(store* s,int num);
+int  count(void);
+int  addchModify(int y, int x, char c);
+void mapModify(int n);
 
 store** store_all ;
-int* store_nums ;
-int store_now;
-char* output_map;
+int*    store_nums;
+int     store_now ;
+char*   output_map;
 
-int count(){
-	int min = 0;
-	if (LOGO == 1){
-		if(-LOGOLENGTH-1 < min) 
-			min = -LOGOLENGTH-1;
-	}
-	else if (C51 == 1){
-		if (-C51LENGTH-1 < min)
-			min = -C51LENGTH-1;
-	}
-	else {
-		if( -D51LENGTH-1 < min ) 
-			min = -D51LENGTH-1;
-	}
-	return min;
+int count()
+{
+    int min = 0;
+    if (LOGO == 1)
+        min = -LOGOLENGTH-1;
+    else if (C51 == 1)
+        min = -C51LENGTH-1;
+    else 
+        min = -D51LENGTH-1;
+    return min;
 }
 
 int addchModify(int y, int x, char c)
 {
-//	printf("%d %d %c\n",y,x,c);
-	if(y<0)
-		return ERR;
-	if( x >= COLS)//too large
-		return ERR;
+//    printf("%d %d %c\n",y,x,c);
+    if(y<0)
+        return ERR;
+    if( x >= COLS)//too large
+        return ERR;
 
-	store *s = &store_all[store_now][store_nums[store_now]++];
-	s->y = y;
-	s->x = x;
-	s->c = c;
-	return OK;
+    store *s = &store_all[store_now][store_nums[store_now]++];
+    s->y = y;
+    s->x = x;
+    s->c = c;
+    return OK;
 }
 
 int my_mvaddstr(int y, int x, char *str)
@@ -107,91 +98,85 @@ void option(char *str)
 
 void windowInit(int c, int l, char *arg)
 {
-	// set var
-	extern int COLS,LINES,N;
-	COLS = c;//83;
-	LINES= l;//47;
+    // set var
+    extern int COLS,LINES,N;
+    COLS = c;//83;
+    LINES= l;//47;
     for (;*arg;++arg){
         if (*arg == '-') {
             option(arg+1);
         }
     }
-	N = -count()+COLS-1;
+    N = -count()+COLS-1;
 
-	// store data
-	store_all  = (store **)malloc(sizeof(store*)*(N+1));
-	store_nums = (int *)   malloc(sizeof(int)   *(N+1));
+    // store data
+    store_all  = (store **)malloc(sizeof(store*)*N);
+    store_nums = (int *)   malloc(sizeof(int)   *N);
 
-	int x;
+    int x;
     for (x = COLS - 1; ; --x) {
-		int mod = -x+COLS-1;
-		store_now = mod;
-		store_nums [mod] = 0;
-		store_all  [mod] = (store *)malloc(sizeof(store)*COLS*LINES);
-        if (LOGO == 1) {
-            if (add_sl(x)  == ERR) break;
-        }
-        else if (C51 == 1) {
-            if (add_C51(x) == ERR) break;
-        }
-        else {
-            if (add_D51(x) == ERR) break;
-        }
+        int mod = -x+COLS-1;
+        if(mod >= N) 
+            break;
+        store_now = mod;
+        store_nums [mod] = 0;
+        store_all  [mod] = (store *)malloc(sizeof(store)*COLS*LINES);
+        if (LOGO == 1)
+            add_sl(x);
+        else if (C51 == 1) 
+            add_C51(x);
+        else
+            add_D51(x);
     }
 
-	if(-x+COLS-1 != N) //error
-	{
-		puts("error");
-		exit(1);
-	}
 
-	// output string
-	output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
-	memset(output_map,' ',(sizeof(char)*LINES*(COLS+1)));
-	for(x=0; x<LINES; ++x)
-		output_map[x*(COLS+1)+COLS]='\n';
-	output_map[LINES*(COLS+1)-1]='\0';
-
+    // output string
+    output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
+    memset(output_map,' ',     (sizeof(char)*LINES*(COLS+1)));
+    for(x=0; x<LINES; ++x)
+        output_map[x*(COLS+1)+COLS]='\n';
+    output_map[LINES*(COLS+1)-1]='\0';
 }
 
 void windowDestroy()
 {
-	int x;
+    int x;
     for (x = 0; x<N; ++x) 
-		free(store_all[x]);
-	free(store_all );
-	free(store_nums);
-	free(output_map);
+        free(store_all[x]);
+    free(store_all );
+    free(store_nums);
+    free(output_map);
 }
 
 /* main
 int main(int argc, char *argv[])
 {
-	windowInit(83,47,"-F");
-	my_output();
-	windowDestroy();
-	printf("OK\n");
-	return 0;
+    windowInit(83,47,"-F");
+    my_output();
+    windowDestroy();
+    printf("OK\n");
+    return 0;
 }
 */ 
 
 void my_output()
 {
-	int x;
+    int x;
     for(x=0; x<N; ++x)
-	{
-		mapModify(store_all[x],store_nums[x]);
-		printf("%s\n",output_map);
-		usleep(10000);
-	}
+    {
+        mapModify(x);
+        printf("%s\n",output_map);
+        usleep(10000);
+    }
 }
 
-void mapModify(store *s,int num)
+void mapModify(int n)
 {
-	int i;
-	for(i=0;i<num;++i)
-		if( s[i].x < COLS)
-			output_map[s[i].y*(COLS+1)+s[i].x] = s[i].c;
+    int i;
+    store *s = store_all[n];
+    for(i=0;i<store_nums[n];++i)
+        if( s[i].x < COLS)
+            output_map[s[i].y*(COLS+1)+s[i].x] = s[i].c;
 }
 
 int add_sl(int x)
@@ -212,7 +197,6 @@ int add_sl(int x)
 
     int i, y, py1 = 0, py2 = 0, py3 = 0;
 
-    if (x < - LOGOLENGTH)  return ERR;
     y = LINES / 2 - 3;
 
     if (FLY == 1) {
@@ -256,7 +240,6 @@ int add_D51(int x)
 
     int y, i, dy = 0;
 
-    if (x < - D51LENGTH)  return ERR;
     y = LINES / 2 - 5;
 
     if (FLY == 1) {
@@ -296,7 +279,6 @@ int add_C51(int x)
 
     int y, i, dy = 0;
 
-    if (x < - C51LENGTH)  return ERR;
     y = LINES / 2 - 5;
 
     if (FLY == 1) {

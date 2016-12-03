@@ -1,4 +1,7 @@
-/sl
+__pycache__/
 env
 build
-__pycache__/
+/sl
+dist/
+*.egg-info/
+

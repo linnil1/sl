@@ -1,5 +1,5 @@
 import slpyc
-def sl(cols,lines,arg):
+def sl(cols,lines,arg=''):
     slpyc.init(cols,lines,arg)
     while True:
         x = slpyc.step()

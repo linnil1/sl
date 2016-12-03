@@ -1,16 +1,10 @@
 #include<Python.h>
 // from sl.c
-typedef struct {
-	int y,x;
-	char c;
-}store;
 extern int N;
-extern store** store_all ;
-extern int* store_nums ;
 extern char* output_map;
 void windowInit(int c, int l,char *arg);
 void windowDestroy(void);
-void mapModify(store* s,int num);
+void mapModify(int n);
 
 int sl_step=0;
 
@@ -20,7 +14,7 @@ static PyObject * slpyc_init(PyObject *self, PyObject *args)
 	const char *arg;
 	if (!PyArg_ParseTuple(args, "iis", &c,&l,&arg))
 		return NULL;
-	windowInit(c,l,arg);
+	windowInit(c,l,(char *)arg);
 	sl_step=0;
 	Py_RETURN_NONE;
 }
@@ -34,7 +28,7 @@ static PyObject * slpyc_step(PyObject *self, PyObject *args)
 //	printf("%d %d\n",sl_step,N);
 	if(sl_step < N)
 	{
-		mapModify(store_all[sl_step],store_nums[sl_step]);
+		mapModify(sl_step);
 		++sl_step;
 		return Py_BuildValue("s",output_map);
 	}
