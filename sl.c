@@ -6,48 +6,18 @@
  *        Last Modified: 2014/06/03
  *========================================
  */
-/* sl version 5.02 : Fix compiler warnings.                                  */
-/*                                              by Jeff Schwab    2014/06/03 */
-/* sl version 5.01 : removed cursor and handling of IO                       */
-/*                                              by Chris Seymour  2014/01/03 */
-/* sl version 5.00 : add -c option                                           */
-/*                                              by Toyoda Masashi 2013/05/05 */
-/* sl version 4.00 : add C51, usleep(40000)                                  */
-/*                                              by Toyoda Masashi 2002/12/31 */
-/* sl version 3.03 : add usleep(20000)                                       */
-/*                                              by Toyoda Masashi 1998/07/22 */
-/* sl version 3.02 : D51 flies! Change options.                              */
-/*                                              by Toyoda Masashi 1993/01/19 */
-/* sl version 3.01 : Wheel turns smoother                                    */
-/*                                              by Toyoda Masashi 1992/12/25 */
-/* sl version 3.00 : Add d(D51) option                                       */
-/*                                              by Toyoda Masashi 1992/12/24 */
-/* sl version 2.02 : Bug fixed.(dust remains in screen)                      */
-/*                                              by Toyoda Masashi 1992/12/17 */
-/* sl version 2.01 : Smoke run and disappear.                                */
-/*                   Change '-a' to accident option.                         */
-/*                                              by Toyoda Masashi 1992/12/16 */
-/* sl version 2.00 : Add a(all),l(long),F(Fly!) options.                     */
-/*                                              by Toyoda Masashi 1992/12/15 */
-/* sl version 1.02 : Add turning wheel.                                      */
-/*                                              by Toyoda Masashi 1992/12/14 */
-/* sl version 1.01 : Add more complex smoke.                                 */
-/*                                              by Toyoda Masashi 1992/12/14 */
-/* sl version 1.00 : SL runs vomitting out smoke.                            */
-/*                                              by Toyoda Masashi 1992/12/11 */
+/*========================================
+ *    sl.c: SL for python
+ *========================================
+ */
 
 #include <curses.h>
-#include <signal.h>
 #include <unistd.h>
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "sl.h"
-typedef struct {
-	int y,x;
-	char c;
-}store;
 
 void add_smoke(int y, int x);
 void add_man(int y, int x);
@@ -55,29 +25,56 @@ int add_C51(int x);
 int add_D51(int x);
 int add_sl(int x);
 void option(char *str);
-
-int my_mvaddstr(int y, int x, char *str);
-void my_output(store** store_all,int* store_nums,int lim);
-
 int ACCIDENT  = 0;
 int LOGO      = 0;
 int FLY       = 0;
 int C51       = 0;
 
+typedef struct {
+	int y,x;
+	char c;
+}store;
+int COLS,LINES,N;
+
+int my_mvaddstr(int y, int x, char *str);
+void my_output(void);
+void windowInit(int c, int l, char *arg);
+void windowDestroy(void);
+int count(void);
 int addchModify(int y, int x, char c);
-void mapModify(store* s,int num,char *output_map);
-store *store_ptr;
-int store_num;
+void mapModify(store* s,int num);
+
+store** store_all ;
+int* store_nums ;
+int store_now;
+char* output_map;
+
+int count(){
+	int min = 0;
+	if (LOGO == 1){
+		if(-LOGOLENGTH < min) 
+			min = -LOGOLENGTH;
+	}
+	else if (C51 == 1){
+	   if( -D51LENGTH < min ) 
+			min = -D51LENGTH;
+	}
+	else {
+		if (-C51LENGTH < min)
+			min = -C51LENGTH;
+	}
+	return min;
+}
 
 int addchModify(int y, int x, char c)
 {
 //	printf("%d %d %c\n",y,x,c);
-	store *s = &store_ptr[store_num++];
 	if(y<0)
-	{
-		printf("y<0");
 		return ERR;
-	}
+	if( x >= COLS)//too large
+		return ERR;
+
+	store *s = &store_all[store_now][store_nums[store_now]++];
 	s->y = y;
 	s->x = x;
 	s->c = c;
@@ -95,9 +92,9 @@ int my_mvaddstr(int y, int x, char *str)
 
 void option(char *str)
 {
-    extern int ACCIDENT, FLY, LONG;
+    extern int ACCIDENT, FLY;//, LONG; //what is LONG 
 
-    while (*str != '\0') {
+    while (*str != '\0' && *str != '-') {
         switch (*str++) {
             case 'a': ACCIDENT = 1; break;
             case 'F': FLY      = 1; break;
@@ -108,32 +105,31 @@ void option(char *str)
     }
 }
 
-#define M_change 10000
-#define N        200
-
-int COLS,LINES;
-int main(int argc, char *argv[])
+void windowInit(int c, int l, char *arg)
 {
-    int x, i;
-	extern int COLS,LINES;
-	COLS = 83;
-	LINES= 47;
-
-    for (i = 1; i < argc; ++i) {
-        if (*argv[i] == '-') {
-            option(argv[i] + 1);
+	// set var
+	extern int COLS,LINES,N;
+	COLS = c;//83;
+	LINES= l;//47;
+    for (;*arg;++arg){
+        if (*arg == '-') {
+            option(arg+1);
         }
     }
+	N = -count()+COLS-1;
 
-	store* store_all[N] ;
-	int store_nums[N] ;
+	// store data
+	store_all  = (store **)malloc(sizeof(store*)*N);
+	store_nums = (int *)   malloc(sizeof(int)   *N);
 
+	int x;
     for (x = COLS - 1; ; --x) {
-		int mod = x+N/2;
-		store_ptr = store_all[mod] = (store *)malloc(sizeof(store)*M_change);
-		store_num = 0;
+		int mod = -x+COLS-1;
+		store_now = mod;
+		store_nums [mod] = 0;
+		store_all  [mod] = (store *)malloc(sizeof(store)*COLS*LINES);
         if (LOGO == 1) {
-            if (add_sl(x) == ERR) break;
+            if (add_sl(x)  == ERR) break;
         }
         else if (C51 == 1) {
             if (add_C51(x) == ERR) break;
@@ -141,41 +137,50 @@ int main(int argc, char *argv[])
         else {
             if (add_D51(x) == ERR) break;
         }
-		store_nums[mod] = store_num;
     }
-	my_output(store_all,store_nums,x);
 
-	//free
-	int lim = x;
-    for (x = COLS - 1; x>lim; --x) 
-	{
-		int mod = N/2+x;
-		free(store_all[mod]);
-	}
-//	printf("OK");
-	return 0;
+	// output string
+	output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
+	memset(output_map,' ',(sizeof(char)*LINES*(COLS+1)));
+	for(x=0; x<LINES; ++x)
+		output_map[x*(COLS+1)+COLS]='\n';
+	output_map[LINES*(COLS+1)-1]='\0';
+
 }
 
-void my_output(store** store_all,int* store_nums,int lim)
+void windowDestroy()
 {
-	char *output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
-	memset(output_map,' ',(sizeof(char)*LINES*(COLS+1)));
 	int x;
-	for(x=0;x<LINES;++x)
-		output_map[     x*(COLS+1)+COLS  ]='\0';
-
-    for (x = COLS - 1; x>lim; --x) 
-	{
-		int mod = N/2+x,i;
-		mapModify(store_all[mod],store_nums[mod],output_map);
-		for(i=0;i<LINES;++i)
-			printf("%s\n",output_map+i*(COLS+1));
-		usleep(10000);
-	}
+    for (x = 0; x<N; ++x) 
+		free(store_all[x]);
+	free(store_all );
+	free(store_nums);
 	free(output_map);
 }
 
-void mapModify(store *s,int num,char *output_map)
+/* main
+int main(int argc, char *argv[])
+{
+	windowInit(83,47,"-F");
+	my_output();
+	windowDestroy();
+	printf("OK\n");
+	return 0;
+}
+*/ 
+
+void my_output()
+{
+	int x;
+    for(x=0; x<N; ++x)
+	{
+		mapModify(store_all[x],store_nums[x]);
+		printf("%s\n",output_map);
+		usleep(10000);
+	}
+}
+
+void mapModify(store *s,int num)
 {
 	int i;
 	for(i=0;i<num;++i)
