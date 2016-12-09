@@ -10,7 +10,10 @@ This code are modifyied from
 https://github.com/mtoyoda/sl
 
 Add dance -d option from https://github.com/Suloch/sl.git
-Add -ll longer locomotive from https://github.com/eduardostalinho/sl.git:allow_longer_locomotive
+Add -ll longer locomotive from https://github.com/eduardostalinho/sl:allow_longer_locomotive
+Add -r  for random flag   from https://github.com/previsualconsent/sl
+
+
 
 
 SL(1): Cure your bad habit of mistyping

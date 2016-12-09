@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+#include <stdlib.h>
 #include "sl.h"
 
 void add_smoke(int y, int x);
@@ -28,6 +30,7 @@ int LOGO      = 0;
 int FLY       = 0;
 int C51       = 0;
 int DANCE     = 0;
+int RAND      = 0;
 
 int COLS,LINES,N;
 
@@ -73,7 +76,7 @@ int my_mvaddstr(int y, int x, char *str)
 
 void option(char *str)
 {
-    extern int ACCIDENT, FLY, LOGO, CS1;
+    extern int ACCIDENT, FLY, LOGO, CS1, RAND;
 
     while (*str != '\0' && *str != '-') {
         switch (*str++) {
@@ -82,6 +85,7 @@ void option(char *str)
             case 'F': FLY       = 1; break;
             case 'c': C51       = 1; break;
             case 'd': DANCE     = 1; break;
+            case 'r': RAND      = 1; break;
             default:                 break;
         }
     }
@@ -94,11 +98,20 @@ void windowInit(int c, int l, char *arg)
     COLS = c;//83;
     LINES= l;//47;
 
-    ACCIDENT = LOGO = FLY = C51 = DANCE = 0;
+    ACCIDENT = LOGO = FLY = C51 = DANCE = RAND =  0;
     for (;*arg;++arg){
         if (*arg == '-') {
             option(arg+1);
         }
+    }
+
+    if (RAND == 1)
+    {
+        srand(time(NULL));
+        ACCIDENT  |= rand() % 2;
+        LOGO      |= rand() % 2;
+        FLY       |= rand() % 2;
+        C51       |= rand() % 2;
     }
     N = -count()+COLS-1;
 
@@ -119,14 +132,13 @@ void windowDestroy()
 /*
 int main(int argc, char *argv[])
 {
-    windowInit(83,47,"-dll");
+    windowInit(83,47,"-r");
     my_output();
     windowDestroy();
     printf("OK\n");
     return 0;
 }
 */
-
 
 void my_output()
 {
