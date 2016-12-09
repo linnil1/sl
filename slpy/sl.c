@@ -40,9 +40,9 @@ char*   output_map;
 
 int count()
 {
-    int min = 0;
-    if (LOGO == 1)
-        min = -LOGOLENGTH-1;
+    int min = 0, offset=21;
+    if (LOGO >= 1)
+        min = -LOGOLENGTH-1-offset*(LOGO-1);
     else if (C51 == 1)
         min = -C51LENGTH-1;
     else 
@@ -53,11 +53,8 @@ int count()
 int addchModify(int y, int x, char c)
 {
 //    printf("%d %d %c\n",y,x,c);
-    if(y<0)
+    if(y<0 || x<0 || x >= COLS || y >= LINES)//bound
         return ERR;
-    if( x >= COLS)//too large
-        return ERR;
-
 	output_map[ y*(COLS+1) + x ] = c;
     return OK;
 }
@@ -73,15 +70,15 @@ int my_mvaddstr(int y, int x, char *str)
 
 void option(char *str)
 {
-    extern int ACCIDENT, FLY;//, LONG; //what is LONG 
+    extern int ACCIDENT, FLY, LOGO, CS1;
 
     while (*str != '\0' && *str != '-') {
         switch (*str++) {
-            case 'a': ACCIDENT = 1; break;
-            case 'F': FLY      = 1; break;
-            case 'l': LOGO     = 1; break;
-            case 'c': C51      = 1; break;
-            default:                break;
+            case 'l': LOGO     += 1; break;
+            case 'a': ACCIDENT  = 1; break;
+            case 'F': FLY       = 1; break;
+            case 'c': C51       = 1; break;
+            default:                 break;
         }
     }
 }
@@ -92,6 +89,8 @@ void windowInit(int c, int l, char *arg)
     extern int COLS,LINES,N;
     COLS = c;//83;
     LINES= l;//47;
+
+	ACCIDENT = LOGO = FLY = C51 = 0;
     for (;*arg;++arg){
         if (*arg == '-') {
             option(arg+1);
@@ -113,16 +112,16 @@ void windowDestroy()
     free(output_map);
 }
 
-/*
+
 int main(int argc, char *argv[])
 {
-    windowInit(83,47,"-F");
+    windowInit(83,47,"-clll");
     my_output();
     windowDestroy();
     printf("OK\n");
     return 0;
 }
-*/
+
 
 void my_output()
 {
@@ -139,7 +138,7 @@ void mapModify(int mod)
 {
 //	int mod = -x+COLS-1;
 	int x = -mod+COLS-1;
-	if (LOGO == 1)
+	if (LOGO >= 1)
 		add_sl(x);
 	else if (C51 == 1) 
 		add_C51(x);
@@ -163,7 +162,7 @@ int add_sl(int x)
     static char *car[LOGOHIGHT + 1]
         = {LCAR1, LCAR2, LCAR3, LCAR4, LCAR5, LCAR6, DELLN};
 
-    int i, y, py1 = 0, py2 = 0, py3 = 0;
+    int i, j, y, py1 = 0, py2 = 0, py3 = 0, offset = 21, yoffset = 0;
 
     y = LINES / 2 - 3;
 
@@ -172,15 +171,21 @@ int add_sl(int x)
         py1 = 2;  py2 = 4;  py3 = 6;
     }
     for (i = 0; i <= LOGOHIGHT; ++i) {
-        my_mvaddstr(y + i, x, sl[(LOGOLENGTH + x) / 3 % LOGOPATTERNS][i]);
+        my_mvaddstr(y + i, x, sl[(LOGOLENGTH+offset*(LOGO-1) + x) / 3 % LOGOPATTERNS][i]);
         my_mvaddstr(y + i + py1, x + 21, coal[i]);
-        my_mvaddstr(y + i + py2, x + 42, car[i]);
-        my_mvaddstr(y + i + py3, x + 63, car[i]);
+        for (j = 0; j <= LOGO; j++) {
+            yoffset = 2 * j * FLY;
+            my_mvaddstr(y + i + py3 +  yoffset, x + 42 + offset * j, car[i]);
+        }
     }
     if (ACCIDENT == 1) {
         add_man(y + 1, x + 14);
-        add_man(y + 1 + py2, x + 45);  add_man(y + 1 + py2, x + 53);
-        add_man(y + 1 + py3, x + 66);  add_man(y + 1 + py3, x + 74);
+        yoffset = 0;
+        for (j = 0; j <= LOGO; j++) {
+            yoffset = FLY * (2 + 2 * j);
+            add_man(y + 1 + py2 + yoffset, x + 45 + offset * j);
+            add_man(y + 1 + py2 + yoffset, x + 53 + offset * j);
+        }
     }
     add_smoke(y - 1, x + LOGOFUNNEL);
     return OK;
