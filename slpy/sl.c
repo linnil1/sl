@@ -26,10 +26,6 @@ int LOGO      = 0;
 int FLY       = 0;
 int C51       = 0;
 
-typedef struct {
-    int y,x;
-    char c;
-}store;
 int COLS,LINES,N;
 
 int  my_mvaddstr(int y, int x, char *str);
@@ -40,9 +36,6 @@ int  count(void);
 int  addchModify(int y, int x, char c);
 void mapModify(int n);
 
-store** store_all ;
-int*    store_nums;
-int     store_now ;
 char*   output_map;
 
 int count()
@@ -65,10 +58,7 @@ int addchModify(int y, int x, char c)
     if( x >= COLS)//too large
         return ERR;
 
-    store *s = &store_all[store_now][store_nums[store_now]++];
-    s->y = y;
-    s->x = x;
-    s->c = c;
+	output_map[ y*(COLS+1) + x ] = c;
     return OK;
 }
 
@@ -109,28 +99,8 @@ void windowInit(int c, int l, char *arg)
     }
     N = -count()+COLS-1;
 
-    // store data
-    store_all  = (store **)malloc(sizeof(store*)*N);
-    store_nums = (int *)   malloc(sizeof(int)   *N);
-
+    // init output string
     int x;
-    for (x = COLS - 1; ; --x) {
-        int mod = -x+COLS-1;
-        if(mod >= N) 
-            break;
-        store_now = mod;
-        store_nums [mod] = 0;
-        store_all  [mod] = (store *)malloc(sizeof(store)*COLS*LINES);
-        if (LOGO == 1)
-            add_sl(x);
-        else if (C51 == 1) 
-            add_C51(x);
-        else
-            add_D51(x);
-    }
-
-
-    // output string
     output_map = (char *)malloc(sizeof(char)*LINES*(COLS+1));
     memset(output_map,' ',     (sizeof(char)*LINES*(COLS+1)));
     for(x=0; x<LINES; ++x)
@@ -140,15 +110,10 @@ void windowInit(int c, int l, char *arg)
 
 void windowDestroy()
 {
-    int x;
-    for (x = 0; x<N; ++x) 
-        free(store_all[x]);
-    free(store_all );
-    free(store_nums);
     free(output_map);
 }
 
-/* main
+/*
 int main(int argc, char *argv[])
 {
     windowInit(83,47,"-F");
@@ -157,7 +122,7 @@ int main(int argc, char *argv[])
     printf("OK\n");
     return 0;
 }
-*/ 
+*/
 
 void my_output()
 {
@@ -170,13 +135,16 @@ void my_output()
     }
 }
 
-void mapModify(int n)
+void mapModify(int mod)
 {
-    int i;
-    store *s = store_all[n];
-    for(i=0;i<store_nums[n];++i)
-        if( s[i].x < COLS)
-            output_map[s[i].y*(COLS+1)+s[i].x] = s[i].c;
+//	int mod = -x+COLS-1;
+	int x = -mod+COLS-1;
+	if (LOGO == 1)
+		add_sl(x);
+	else if (C51 == 1) 
+		add_C51(x);
+	else
+		add_D51(x);
 }
 
 int add_sl(int x)
