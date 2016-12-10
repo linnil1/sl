@@ -9,7 +9,7 @@ module1 = Extension('slpyc',
 
 setup (name = 'slpy',
        packages=['slpy'],
-       version = '1.5.1',
+       version = '1.5.2',
        license='MIT',
        author = 'linnil1',
        author_email = 'linnil1.886@gmail.com',
