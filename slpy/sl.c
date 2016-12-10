@@ -112,6 +112,7 @@ void windowInit(int c, int l, char *arg)
         LOGO      |= rand() % 2;
         FLY       |= rand() % 2;
         C51       |= rand() % 2;
+        DANCE     |= rand() % 2;
     }
     N = -count()+COLS-1;
 
@@ -129,6 +130,7 @@ void windowDestroy()
     free(output_map);
 }
 
+
 /*
 int main(int argc, char *argv[])
 {
@@ -139,6 +141,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 */
+
 
 void my_output()
 {
@@ -165,7 +168,7 @@ void mapModify(int mod)
 
 int add_sl(int x)
 {
-    static char *sl[LOGOPATTERNS][LOGOHIGHT + 1]
+    static char *sl[LOGOPATTERNS][LOGOHEIGHT + 1]
         = {{LOGO1, LOGO2, LOGO3, LOGO4, LWHL11, LWHL12, DELLN},
            {LOGO1, LOGO2, LOGO3, LOGO4, LWHL21, LWHL22, DELLN},
            {LOGO1, LOGO2, LOGO3, LOGO4, LWHL31, LWHL32, DELLN},
@@ -173,10 +176,10 @@ int add_sl(int x)
            {LOGO1, LOGO2, LOGO3, LOGO4, LWHL51, LWHL52, DELLN},
            {LOGO1, LOGO2, LOGO3, LOGO4, LWHL61, LWHL62, DELLN}};
 
-    static char *coal[LOGOHIGHT + 1]
+    static char *coal[LOGOHEIGHT + 1]
         = {LCOAL1, LCOAL2, LCOAL3, LCOAL4, LCOAL5, LCOAL6, DELLN};
 
-    static char *car[LOGOHIGHT + 1]
+    static char *car[LOGOHEIGHT + 1]
         = {LCAR1, LCAR2, LCAR3, LCAR4, LCAR5, LCAR6, DELLN};
 
     int i, j, y, py1 = 0, py2 = 0, py3 = 0, offset = 21, yoffset = 0;
@@ -184,10 +187,10 @@ int add_sl(int x)
     y = LINES / 2 - 3;
 
     if (FLY == 1) {
-        y = (x / 6) + LINES - (COLS / 6) - LOGOHIGHT;
+        y = (x / 6) + LINES - (COLS / 6) - LOGOHEIGHT;
         py1 = 2;  py2 = 4;  py3 = 6;
     }
-    for (i = 0; i <= LOGOHIGHT; ++i) {
+    for (i = 0; i <= LOGOHEIGHT; ++i) {
         my_mvaddstr(y + i, x, sl[(LOGOLENGTH+offset*(LOGO-1) + x) / 3 % LOGOPATTERNS][i]);
         my_mvaddstr(y + i + py1, x + 21, coal[i]);
         for (j = 0; j <= LOGO; j++) {
@@ -219,7 +222,7 @@ int add_sl(int x)
 
 int add_D51(int x)
 {
-    static char *d51[D51PATTERNS][D51HIGHT + 1]
+    static char *d51[D51PATTERNS][D51HEIGHT + 1]
         = {{D51STR1, D51STR2, D51STR3, D51STR4, D51STR5, D51STR6, D51STR7,
             D51WHL11, D51WHL12, D51WHL13, D51DEL},
            {D51STR1, D51STR2, D51STR3, D51STR4, D51STR5, D51STR6, D51STR7,
@@ -232,7 +235,7 @@ int add_D51(int x)
             D51WHL51, D51WHL52, D51WHL53, D51DEL},
            {D51STR1, D51STR2, D51STR3, D51STR4, D51STR5, D51STR6, D51STR7,
             D51WHL61, D51WHL62, D51WHL63, D51DEL}};
-    static char *coal[D51HIGHT + 1]
+    static char *coal[D51HEIGHT + 1]
         = {COAL01, COAL02, COAL03, COAL04, COAL05,
            COAL06, COAL07, COAL08, COAL09, COAL10, COALDEL};
 
@@ -241,10 +244,10 @@ int add_D51(int x)
     y = LINES / 2 - 5;
 
     if (FLY == 1) {
-        y = (x / 7) + LINES - (COLS / 7) - D51HIGHT;
+        y = (x / 7) + LINES - (COLS / 7) - D51HEIGHT;
         dy = 1;
     }
-    for (i = 0; i <= D51HIGHT; ++i) {
+    for (i = 0; i <= D51HEIGHT; ++i) {
         my_mvaddstr(y + i, x, d51[(D51LENGTH + x) % D51PATTERNS][i]);
         my_mvaddstr(y + i + dy, x + 53, coal[i]);
     }
@@ -261,7 +264,7 @@ int add_D51(int x)
 
 int add_C51(int x)
 {
-    static char *c51[C51PATTERNS][C51HIGHT + 1]
+    static char *c51[C51PATTERNS][C51HEIGHT + 1]
         = {{C51STR1, C51STR2, C51STR3, C51STR4, C51STR5, C51STR6, C51STR7,
             C51WH11, C51WH12, C51WH13, C51WH14, C51DEL},
            {C51STR1, C51STR2, C51STR3, C51STR4, C51STR5, C51STR6, C51STR7,
@@ -274,7 +277,7 @@ int add_C51(int x)
             C51WH51, C51WH52, C51WH53, C51WH54, C51DEL},
            {C51STR1, C51STR2, C51STR3, C51STR4, C51STR5, C51STR6, C51STR7,
             C51WH61, C51WH62, C51WH63, C51WH64, C51DEL}};
-    static char *coal[C51HIGHT + 1]
+    static char *coal[C51HEIGHT + 1]
         = {COALDEL, COAL01, COAL02, COAL03, COAL04, COAL05,
            COAL06, COAL07, COAL08, COAL09, COAL10, COALDEL};
 
@@ -283,10 +286,10 @@ int add_C51(int x)
     y = LINES / 2 - 5;
 
     if (FLY == 1) {
-        y = (x / 7) + LINES - (COLS / 7) - C51HIGHT;
+        y = (x / 7) + LINES - (COLS / 7) - C51HEIGHT;
         dy = 1;
     }
-    for (i = 0; i <= C51HIGHT; ++i) {
+    for (i = 0; i <= C51HEIGHT; ++i) {
         my_mvaddstr(y + i, x, c51[(C51LENGTH + x) % C51PATTERNS][i]);
         my_mvaddstr(y + i + dy, x + 55, coal[i]);
     }
